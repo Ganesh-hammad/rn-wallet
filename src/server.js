@@ -6,12 +6,12 @@ import transactionsRoute from "./routes/transactionsRoute.js";
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+
+app.use(express.json());
+app.use("/api/transactions", transactionsRoute);
 app.get('/', (req, res)=>{
   res.json("api Is working")
 })
-app.use(express.json());
-app.use("/api/transactions", transactionsRoute);
-
 // Initialize database and start server
 initDB().then(() => {
   app.listen(PORT, () => {
