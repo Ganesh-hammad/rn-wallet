@@ -26,7 +26,7 @@ const getTransactions = async (req, res) => {
     const { userId } = req.params;
     const transactions = await sql`
     SELECT * FROM transactions where user_id  = ${userId} ORDER BY created_at DESC`;
-    res.status(200).json({ success: true, transactions });
+    res.status(200).json( transactions);
   } catch (error) {
     console.log("Getting Transaction Error" + error);
     res.status(500).json({ success: false, message: error.message });
@@ -58,17 +58,30 @@ const deleteTransactions = async (req, res) => {
 
 const transactionSummary = async (req, res) => {
   try {
-    const {userId} = req.params;
+    const { userId } = req.params;
+
     const balanceResult = await sql`
-    SELECT COALESCE(SUM(AMOUNT), 0) AS balance FROM transactions WHERE  user_id = ${userId}`
-        const incomeResult = await sql`
-    SELECT COALESCE(SUM(AMOUNT), 0) AS income FROM transactions WHERE  user_id = ${userId} AND amount > 0`
-            const expenceResult = await sql`
-    SELECT COALESCE(SUM(AMOUNT), 0) AS expence FROM transactions WHERE  user_id = ${userId} AND amount < 0`
-    res.status(200).json({success:true, balanceResult: balanceResult[0].balance, incomeResult: incomeResult[0].income, expenceResult :expenceResult[0].expence});
+      SELECT COALESCE(SUM(amount), 0) AS balance
+      FROM transactions WHERE user_id = ${userId}`;
+
+    const incomeResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS income
+      FROM transactions WHERE user_id = ${userId} AND amount > 0`;
+
+    const expenseResult = await sql`
+      SELECT COALESCE(SUM(amount), 0) AS expenses
+      FROM transactions WHERE user_id = ${userId} AND amount < 0`;
+
+    res.status(200).json({
+      success: true,
+      balance: balanceResult[0].balance,
+      income: incomeResult[0].income,
+      expenses: expenseResult[0].expenses, // matching frontend key
+    });
   } catch (error) {
-    console.log("Error getting summary" + error);
+    console.log("Error getting summary: " + error);
     res.status(500).json({ success: false, message: error.message });
   }
-}
+};
+
 export {createTransactions, getTransactions, deleteTransactions, transactionSummary}

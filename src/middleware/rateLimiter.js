@@ -1,23 +1,32 @@
-// rateLimiter.js
+// src/middleware/rateLimiter.js
 import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import "dotenv/config"; // Make sure this is somewhere in your server entry
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.fixedWindow(5, "10 s"),
+});
 
 const rateLimiter = async (req, res, next) => {
   try {
-    // Optionally, you can use the IP or user ID as the key
-    const identifier = req.ip || "global"; 
-
-    const { success } = await Ratelimit.limit(identifier);
-
-    if(!success){
+    const identifier = req.ip || "global";
+    const { success } = await ratelimit.limit(identifier);
+    if (!success) {
       return res.status(429).json({
+        success: false,
         message: "Too many requests, please try again later!",
       });
     }
-
     next();
   } catch (error) {
-    console.error("RateLimit Error:", error);
-    next(error);
+    console.error("RateLimiter Error:", error);
+    res.status(500).json({ success: false, message: "Rate limiter failed" });
   }
 };
 
