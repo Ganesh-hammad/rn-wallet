@@ -26,7 +26,7 @@ const getTransactions = async (req, res) => {
     const { userId } = req.params;
     const transactions = await sql`
     SELECT * FROM transactions where user_id  = ${userId} ORDER BY created_at DESC`;
-    res.status(200).json( transactions);
+    res.status(200).json({ success: true, transactions })
   } catch (error) {
     console.log("Getting Transaction Error" + error);
     res.status(500).json({ success: false, message: error.message });
